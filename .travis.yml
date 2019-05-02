@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t keegang/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run keegang/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t keegang/multi-client ./client 
+  - docker built -t keegang/multi-nginx ./nginx
+  - docker built -t keegang/multi-server ./server
+  - docker built -t keegang/multi-worker ./worker
+  #login to docker-cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  #push images to docker hub
+  - docker push keegang/multi-client
+  - docker push keegang/multi-nginx
+  - docker push keegang/multi-server
+  - docker push keegang/multi-worker
